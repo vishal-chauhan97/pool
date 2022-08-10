@@ -10,8 +10,11 @@ import Control.Exception
 import Control.Monad
 import Data.IORef
 import Data.Primitive.SmallArray
+import Data.Maybe (fromMaybe)
 import GHC.Clock
 import qualified Data.List as L
+import System.Environment (lookupEnv)
+import Text.Read (readMaybe)
 
 -- | Striped resource pool based on "Control.Concurrent.QSem".
 --
@@ -123,7 +126,8 @@ newPool pc = do
 
     -- Collect stale resources from the pool once per second.
     collector pools = forever $ do
-      threadDelay 1000000
+      t <- fromMaybe 30 <$> ((>>= readMaybe) <$> lookupEnv "POOL_DELAY_SECONDS")
+      threadDelay (t * 1000000)
       now <- getMonotonicTime
       let isStale e = now - lastUsed e > poolCacheTTL pc
       mapM_ (cleanStripe isStale (freeResource pc) . stripeVar) pools
