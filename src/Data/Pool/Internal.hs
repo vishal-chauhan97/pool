@@ -27,6 +27,9 @@ data Pool a = Pool
   , reaperRef    :: !(IORef ())
   }
 
+instance Show (Pool a) where 
+  show = show
+
 -- | A single, capability-local pool.
 data LocalPool a = LocalPool
   { stripeId   :: !Int
